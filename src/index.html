@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>SHIRASAGI Desktop</title>
+    <style>
+      .logs {
+        margin: 10px 0;
+        padding: 10px;
+        border: 1px solid #ccc;
+        font-size: 12px;
+      }
+      hr {
+        border: none;
+        border-top: 1px solid #ddd;
+      }
+    </style>
+    <script>
+        window.jQuery = window.$ = require('./js/jquery-3.2.1.min.js');
+    </script>
+  </head>
+ 
+  <body>
+    <h1>SHIRASAGI</h1>
+    <p>
+        node <script>document.write(process.versions.node)</script>,
+        Chrome <script>document.write(process.versions.chrome)</script>,
+        Electron <script>document.write(process.versions.electron)</script>
+    </p>
+
+    <h2>State</h2>
+    <p>
+      <b>Token</b> / <span class="label-token"></span><br />
+      <b>Login</b> / <span class="label-login"></span><br />
+      <b>Pages</b> / <span class="label-pages"></span><br />
+    </p>
+
+    <div>
+      <button class="token">Get token</button>
+      <button class="login">Login</button>
+      <button class="pages">Articles</button>
+    </div>
+
+    <div class="logs"></div>
+
+    <script>
+    var token = null;
+
+    $(function(){
+      $('.token').click(function() { getToken(); });
+      $('.login').click(function() { login(); });
+      $('.pages').click(function() { getArticles(); });
+    });
+
+    function log(str) {
+      $('.logs').prepend(str + '<hr class="hr"/>');
+    }
+    function getToken() {
+      log('Get Token...');
+      $.ajax({
+        url: 'http://demo.ss-proj.org/.mypage/auth_token',
+        success: function(data, dataType) {
+          console.log(data);
+          token = data;
+          $('.label-token').html(token);
+          log('> Token: ' + token);
+        }
+      });
+    }
+    function login() {
+      log('Login...');
+      $.ajax({
+        url: 'http://demo.ss-proj.org/.mypage/login',
+        method: "post",
+        data: {
+          authenticity_token: token,
+          item: {
+            email: "admin", password: "pass"
+          }
+        },
+        success: function(data, status, xhr) {
+          console.log(data);
+          if (data.match(/ログイン/)) {
+            $('.label-login').html('Failed');
+            log('> failed');
+          } else {
+            $('.label-login').html('Success');
+            log('> success');
+          }
+        }
+      });
+    }
+    function getArticles() {
+      log('Get articles...');
+      $.ajax({
+        url: 'http://demo.ss-proj.org/.s1/article146/pages.json',
+        dataType: 'json',
+        success: function(data, dataType) {
+          console.log(data);
+          $.each(data, function(idx, el) {
+            log('> ' + el.name);
+          });
+          $('.label-pages').html(data.length);
+        }
+      });
+    }
+    </script>
+  </body>
+</html>
